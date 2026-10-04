@@ -6,7 +6,7 @@ The OCI image includes `delphix-masking-helper`, `delphix_install_report`, `dct-
 Java 17 JRE, Python 3, `jq`, Knap, and the licensed JAR files required by the Masking Devkit.
 
 The execution host does not need Java, Node.js, Python, npm, jq, or Knap installed. It only needs a
-container runtime, preferably Podman on RHEL or Oracle Linux 9.
+container runtime. Podman on RHEL or Oracle Linux 9 is the validated runtime for this project.
 
 ## Scope
 
@@ -74,6 +74,44 @@ must be downloaded from the authorized Perforce/DCT portal; see [vendor/README.m
 
 The toolkit path inside the image is always `/home/delphix/.local/bin/dct-toolkit`.
 
+### Masking Devkit JAR files
+
+The image includes the required JAR files from the official Delphix Continuous Compliance Masking
+Devkit version `23.0.0`, located in:
+
+```text
+../Masking_Devkit_23.0.0/sdkTools/lib
+```
+
+The build preparation script copies only the required runtime libraries into:
+
+```text
+.build-context/delphix-masking-helper/lib
+```
+
+The current selection is:
+
+```text
+ant-1.10.13.jar
+commons-codec-1.11.jar
+commons-compiler-3.1.6.jar
+commons-lang-2.6.jar
+delphix-algorithm-plugin-2026.5.0-FINAL.jar
+failureaccess-1.0.3.jar
+guava-33.6.0-jre.jar
+jackson-annotations-2.21.jar
+jackson-core-2.21.5.jar
+jackson-databind-2.21.5.jar
+jackson-datatype-jdk8-2.21.5.jar
+jackson-datatype-jsr310-2.21.5.jar
+jackson-module-jsonSchema-2.21.5.jar
+janino-3.1.6.jar
+masking-extensibility-api-2026.5.0-FINAL.jar
+```
+
+The remainder of the Devkit is deliberately not copied into the image. The preparation script
+fails if any required JAR is missing from the official Devkit directory.
+
 ## Building the image
 
 ```bash
@@ -81,6 +119,19 @@ cd delphix-implementation-toolkit
 chmod +x prepare-build-context.sh
 ./prepare-build-context.sh
 podman build --tag localhost/delphix-implementation-toolkit:0.1.0 --file Dockerfile .build-context
+```
+
+The build and runtime validation documented in this project were performed with Podman. Docker is
+also supported by the same Dockerfile, but equivalent Docker commands have not been functionally
+validated in this project.
+
+Docker build equivalent:
+
+```bash
+docker build \
+  --tag delphix-implementation-toolkit:0.1.0 \
+  --file Dockerfile \
+  .build-context
 ```
 
 The script copies only the required files. It does not copy `node_modules`, local SQLite databases,
@@ -98,8 +149,8 @@ The Dockerfile uses an intermediate build stage. The final image receives only:
 - `dct-toolkit`.
 
 The final image does not contain frontend source files, development dependencies, build tools, local
-test files, or the rest of the SDK. The same Dockerfile works with Docker by replacing `podman build`
-with `docker build`.
+test files, or the rest of the SDK. The same Dockerfile is intended to work with Docker by replacing
+the Podman commands with their Docker equivalents.
 
 The build requires Internet access or an accessible mirror to download the base image, Debian
 Bookworm packages, npm dependencies, and Knap. The execution VM does not need Internet access after
@@ -172,6 +223,18 @@ podman run --rm --entrypoint bash \
   -lc 'find /opt/delphix-masking-helper/lib -maxdepth 1 -name "*.jar" -printf "%f\\n" | sort'
 ```
 
+Docker equivalents:
+
+```bash
+docker run --rm --entrypoint bash \
+  delphix-implementation-toolkit:0.1.0 \
+  -lc 'node --version; java -version; python3 --version; jq --version; knap --version; /home/delphix/.local/bin/dct-toolkit --help || true'
+
+docker run --rm --entrypoint bash \
+  delphix-implementation-toolkit:0.1.0 \
+  -lc 'find /opt/delphix-masking-helper/lib -maxdepth 1 -name "*.jar" -printf "%f\\n" | sort'
+```
+
 ## Offline export
 
 ```bash
@@ -186,6 +249,23 @@ On the execution VM:
 ```bash
 sha256sum --check delphix-implementation-toolkit-0.1.0.tar.gz.sha256
 gunzip -c delphix-implementation-toolkit-0.1.0.tar.gz | podman load
+```
+
+Docker export/import equivalent:
+
+```bash
+docker save \
+  --output delphix-implementation-toolkit-0.1.0.tar \
+  delphix-implementation-toolkit:0.1.0
+gzip -9 delphix-implementation-toolkit-0.1.0.tar
+sha256sum delphix-implementation-toolkit-0.1.0.tar.gz > delphix-implementation-toolkit-0.1.0.tar.gz.sha256
+```
+
+On the execution host:
+
+```bash
+sha256sum --check delphix-implementation-toolkit-0.1.0.tar.gz.sha256
+docker load --input delphix-implementation-toolkit-0.1.0.tar.gz
 ```
 
 ## Environment configuration
@@ -295,6 +375,19 @@ curl --fail http://127.0.0.1:3000/api/version
 podman logs delphix-masking-helper
 ```
 
+Docker equivalent for the manual helper container:
+
+```bash
+docker run -d \
+  --name delphix-masking-helper \
+  --publish 3000:3000 \
+  --volume dlpx-helper-db:/opt/delphix-masking-helper/db \
+  --volume dlpx-helper-files:/home/delphix/test-files \
+  delphix-implementation-toolkit:0.1.0
+```
+
+The Docker command is provided for portability; the helper was functionally tested with Podman.
+
 ## Permanent service with Quadlet
 
 Before activating this service, verify that no manual execution is active. If one is active, stop it
@@ -365,6 +458,28 @@ key encryption is tied to the local hostname.
 `$HOME/delphix-reports` is created on the host and is mounted into the container as
 `/home/delphix/reports`. The generated report therefore remains in the home directory of the user
 who runs the command.
+
+Docker equivalent for the one-off report:
+
+```bash
+mkdir -p "$HOME/delphix-reports"
+docker run --rm \
+  --user 0 \
+  --hostname dlpx-toolkit \
+  --add-host dlpx-toolkit:127.0.0.1 \
+  --network host \
+  --volume "$HOME/delphix-reports:/home/delphix/reports:Z" \
+  --volume "$HOME/.dct-toolkit:/root/.dct-toolkit:ro,Z" \
+  delphix-implementation-toolkit:0.1.0 \
+  cc-install-report \
+    --client "Organization name" \
+    --prefix "0-" \
+    --output /home/delphix/reports/report.md \
+    --template /home/delphix/.local/bin/cc_install_report_sp.md \
+    --profile-set "ASDD Spanish"
+```
+
+This Docker report command has not been functionally validated in this project.
 
 ## Security
 
