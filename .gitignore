@@ -1,0 +1,16 @@
+# Generated Docker/Podman build context.
+.build-context/
+
+# Offline image exports and client-specific material.
+*.tar
+*.tar.gz
+*.sha256
+*.properties
+output/
+reports/
+*.log
+
+# Licensed/customer-specific toolkit and configuration.
+vendor/dct-toolkit
+vendor/*.properties
+!vendor/dct-toolkit.properties.example

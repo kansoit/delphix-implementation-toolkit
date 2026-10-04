@@ -1,0 +1,6 @@
+# Configuración específica del cliente.
+# Completar con los valores entregados por DCT/Perforce.
+# Este archivo es solo una plantilla y no contiene credenciales reales.
+
+# dctUrl=<URL-o-IP-de-DCT>
+# apiKey=<API-KEY-DE-DCT>
