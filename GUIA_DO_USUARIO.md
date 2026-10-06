@@ -327,7 +327,9 @@ services:
 
 volumes:
   dlpx-helper-db:
+    name: dlpx-helper-db
   dlpx-helper-files:
+    name: dlpx-helper-files
 ```
 
 Antes de iniciar o Compose, verifique se não há um helper manual ou Quadlet em execução:
