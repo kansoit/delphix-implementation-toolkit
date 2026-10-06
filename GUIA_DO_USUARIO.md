@@ -146,6 +146,15 @@ sudo docker run --rm -it \
 O arquivo contém o endereço do DCT e o token de acesso do ambiente. Não é necessário modificar a
 imagem quando esses valores forem alterados.
 
+Esses volumes não são criados durante a construção da imagem. O Masking Helper os utiliza durante a
+execução para conservar dados locais:
+
+- `dlpx-helper-db` armazena o banco SQLite e a configuração do helper.
+- `dlpx-helper-files` armazena os arquivos do servidor e os lookups.
+
+Eles são montados em `/opt/delphix-masking-helper/db` e `/opt/delphix-masking-helper/test-files`,
+respectivamente.
+
 ## Volumes
 
 ```bash
@@ -162,8 +171,8 @@ sudo docker volume create dlpx-helper-files
 
 | Volume | Conteúdo |
 |---|---|
-| `dlpx-helper-db` | Configuração SQLite e algoritmos salvos |
-| `dlpx-helper-files` | Arquivos auxiliares e lookups |
+| `dlpx-helper-db` | `/opt/delphix-masking-helper/db` — configuração SQLite e algoritmos salvos |
+| `dlpx-helper-files` | `/opt/delphix-masking-helper/test-files` — arquivos do servidor e lookups |
 
 ## Rede e firewall
 

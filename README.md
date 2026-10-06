@@ -338,6 +338,15 @@ docker run --rm -it \
   apiKey
 ```
 
+The image build does not create or require these volumes. At runtime, Masking Helper uses two
+managed volumes to retain its local data:
+
+- `dlpx-helper-db` for the SQLite database and helper configuration.
+- `dlpx-helper-files` for server files and lookup files.
+
+They are mounted at `/opt/delphix-masking-helper/db` and
+`/opt/delphix-masking-helper/test-files`, respectively.
+
 ## Managed volumes
 
 ```bash

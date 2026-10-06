@@ -158,6 +158,15 @@ sudo docker run --rm -it \
 El archivo contiene la dirección de DCT y el token correspondiente al entorno. No es necesario
 modificar la imagen para cambiar estos valores.
 
+Estos volúmenes no se crean durante la construcción de la imagen. Masking Helper los utiliza durante
+la ejecución para conservar datos locales:
+
+- `dlpx-helper-db` almacena la base SQLite y la configuración del helper.
+- `dlpx-helper-files` almacena los archivos del servidor y los lookups.
+
+Se montan en `/opt/delphix-masking-helper/db` y `/opt/delphix-masking-helper/test-files`,
+respectivamente.
+
 ## Volúmenes
 
 Crear los volúmenes administrados por Podman:
@@ -178,8 +187,8 @@ Los volúmenes almacenan:
 
 | Volumen | Contenido |
 |---|---|
-| `dlpx-helper-db` | Configuración y algoritmos guardados en SQLite |
-| `dlpx-helper-files` | Archivos auxiliares y lookups |
+| `dlpx-helper-db` | `/opt/delphix-masking-helper/db` — configuración y algoritmos guardados en SQLite |
+| `dlpx-helper-files` | `/opt/delphix-masking-helper/test-files` — archivos del servidor y lookups |
 
 ## Red y firewall
 

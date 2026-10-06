@@ -146,6 +146,15 @@ sudo docker run --rm -it \
 The file contains the DCT address and environment access token. The image does not need to be
 modified when these values change.
 
+These volumes are not created during the image build. They are used by Masking Helper at runtime
+to retain local data:
+
+- `dlpx-helper-db` stores the SQLite database and helper configuration.
+- `dlpx-helper-files` stores server files and lookup files.
+
+They are mounted at `/opt/delphix-masking-helper/db` and
+`/opt/delphix-masking-helper/test-files`, respectively.
+
 ## Volumes
 
 ```bash
@@ -155,8 +164,8 @@ sudo podman volume create dlpx-helper-files
 
 | Volume | Contents |
 |---|---|
-| `dlpx-helper-db` | SQLite configuration and saved algorithms |
-| `dlpx-helper-files` | Auxiliary files and lookups |
+| `dlpx-helper-db` | `/opt/delphix-masking-helper/db` — SQLite configuration and saved algorithms |
+| `dlpx-helper-files` | `/opt/delphix-masking-helper/test-files` — server files and lookups |
 
 ## Network and firewall
 
