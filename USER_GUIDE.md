@@ -11,13 +11,12 @@ Python, npm, jq, and Knap do not need to be installed on the operating system.
 
 - Any compatible Linux distribution with Podman or Docker Engine installed.
 - x86-64 architecture.
-- Podman or Docker Engine installed.
 - Network access from the VM to DCT and, when applicable, the Masking Engine.
 - Image archive `delphix-implementation-toolkit-<version>.tar.gz`.
 
 ## Install Podman
 
-On a VM with enabled repositories:
+On an RPM-based Linux VM with enabled repositories:
 
 ```bash
 sudo dnf install -y podman fuse-overlayfs slirp4netns
@@ -72,7 +71,7 @@ Load it:
 
 ```bash
 gunzip -c delphix-implementation-toolkit-<version>.tar.gz | podman load
-podman images
+sudo podman images
 ```
 
 Docker equivalent:
@@ -82,10 +81,13 @@ gunzip -c delphix-implementation-toolkit-<version>.tar.gz | sudo docker load
 sudo docker images
 ```
 
-## DCT configuration
+## DCT Toolkit and report configuration
 
-Run the following commands as the user who performs the installation and runs Podman or Docker.
-Create the DCT configuration directory in that user's home directory:
+Masking Helper does not require DCT Toolkit or a DCT properties file. Its Masking Engine URL,
+username, and password are configured through the GUI.
+
+The following configuration is required only for installation report generation. Create the DCT
+configuration directory in the home directory of the user who runs the report:
 
 ```bash
 mkdir -p "$HOME/.dct-toolkit"
@@ -147,8 +149,8 @@ modified when these values change.
 ## Volumes
 
 ```bash
-podman volume create dlpx-helper-db
-podman volume create dlpx-helper-files
+sudo podman volume create dlpx-helper-db
+sudo podman volume create dlpx-helper-files
 ```
 
 | Volume | Contents |
@@ -182,7 +184,7 @@ sudo podman run --rm \
   --name delphix-masking-helper \
   --publish 3000:3000 \
   --volume dlpx-helper-db:/opt/delphix-masking-helper/db \
-  --volume dlpx-helper-files:/home/delphix/test-files \
+  --volume dlpx-helper-files:/opt/delphix-masking-helper/test-files \
   localhost/delphix-implementation-toolkit:<version>
 ```
 
@@ -193,7 +195,7 @@ Open `http://<vm-ip>:3000` and verify:
 
 ```bash
 curl --fail http://127.0.0.1:3000/api/version
-podman logs delphix-masking-helper
+sudo podman logs delphix-masking-helper
 ```
 
 Docker equivalent:
@@ -203,7 +205,7 @@ sudo docker run -d \
   --name delphix-masking-helper \
   --publish 3000:3000 \
   --volume dlpx-helper-db:/opt/delphix-masking-helper/db \
-  --volume dlpx-helper-files:/home/delphix/test-files \
+  --volume dlpx-helper-files:/opt/delphix-masking-helper/test-files \
   delphix-implementation-toolkit:<version>
 sudo docker logs delphix-masking-helper
 ```
@@ -242,7 +244,7 @@ Image=localhost/delphix-implementation-toolkit:<version>
 ContainerName=delphix-masking-helper
 PublishPort=3000:3000
 Volume=dlpx-helper-db:/opt/delphix-masking-helper/db
-Volume=dlpx-helper-files:/home/delphix/test-files
+Volume=dlpx-helper-files:/opt/delphix-masking-helper/test-files
 Environment=PORT=3000
 
 [Service]
@@ -268,7 +270,7 @@ The report is a one-off operation and may run while the helper is stopped or run
 ```bash
 mkdir -p "$HOME/delphix-reports"
 
-podman run --rm \
+sudo podman run --rm \
   --user 0 \
   --hostname dlpx-toolkit \
   --add-host dlpx-toolkit:127.0.0.1 \
@@ -295,10 +297,10 @@ The generated file therefore remains in the home directory of the user who runs 
 ## Troubleshooting
 
 ```bash
-podman ps -a
-podman logs delphix-masking-helper
+sudo podman ps -a
+sudo podman logs delphix-masking-helper
 curl --fail http://127.0.0.1:3000/api/version
-podman volume ls
+sudo podman volume ls
 ```
 
 With Docker:
@@ -320,7 +322,7 @@ Copy the required reports and other deliverables before destroying the VM. Then 
 procedures:
 
 ```bash
-podman volume rm dlpx-helper-db dlpx-helper-files
+sudo podman volume rm dlpx-helper-db dlpx-helper-files
 rm -f "$HOME/.dct-toolkit/dct-toolkit.properties"
 ```
 

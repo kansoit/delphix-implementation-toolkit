@@ -2,8 +2,9 @@
 
 Offline package for temporary Delphix implementation projects.
 
-The OCI image includes `delphix-masking-helper`, `delphix_install_report`, `dct-toolkit`, Node.js 22,
-Java 17 JRE, Python 3, `jq`, Knap, and the licensed JAR files required by the Masking Devkit.
+The OCI image includes `delphix-masking-helper`, `delphix_install_report`, `dct-toolkit`, the current
+Node.js line, Java 17 JRE, Python 3, `jq`, Knap, and the licensed JAR files required by the Masking
+Devkit.
 
 The execution host does not need Java, Node.js, Python, npm, jq, or Knap installed. It only needs a
 container runtime. The image was created and functionally tested with Podman on Oracle Linux 9. As
@@ -27,17 +28,15 @@ The image is shared across environments. Environment-specific information remain
 
 ```text
 delphix-implementation-toolkit
-├── HTTP service: delphix-masking-helper :3000
-├── /home/delphix/.local/bin/cc-install-report
-├── /home/delphix/.local/bin/cc_install_report.py
-├── /home/delphix/.local/bin/cc_install_report_fetch.py
-├── /home/delphix/.local/bin/cc_install_report_render.py
-├── /home/delphix/.local/bin/cc_install_report_*.md
-├── /home/delphix/.local/bin/dct-toolkit
-├── Java 17 JRE
-├── Node.js 22 + Knap
-├── Python 3 + jq
-└── Masking Devkit JAR files
+├── Masking Helper
+│   ├── HTTP service on :3000
+│   ├── /opt/delphix-masking-helper
+│   ├── SQLite database at /opt/delphix-masking-helper/db
+│   ├── server files at /opt/delphix-masking-helper/test-files
+│   └── Masking Devkit JAR files and Java runner
+├── DCT Toolkit at /home/delphix/.local/bin/dct-toolkit
+├── Installation reporting tools at /home/delphix/.local/bin/
+└── Runtime dependencies: Node.js, Python, jq, Knap, and Java 17
 
 External environment configuration
 └── $HOME/.dct-toolkit/dct-toolkit.properties
@@ -57,7 +56,7 @@ The VM must have:
 - Enough space for the image, volumes, and reports.
 
 The VM does not require Internet access. The image archive is transferred using the approved
-mechanism and loaded with `podman load`.
+mechanism and loaded with the selected container runtime.
 
 ## Build sources
 
@@ -157,17 +156,16 @@ The build requires Internet access or an accessible mirror to download the base 
 Bookworm packages, npm dependencies, and Knap. The execution VM does not need Internet access after
 receiving the completed image.
 
-Node.js is not installed from Debian. It comes from the official `node:current-bookworm-slim` image.
-The `current` tag selects the latest Current line published by Node.js. To force a base image refresh:
+Node.js is obtained from the official `node:current-bookworm-slim` base image, not from Debian
+packages. The recommended build always refreshes that base image:
 
 ```bash
 podman build --pull=always \
-  --build-arg NODE_IMAGE=node:current-bookworm-slim \
   --tag localhost/delphix-implementation-toolkit:0.1.0 \
   --file Dockerfile .build-context
 ```
 
-A specific line can also be selected:
+If a specific Node.js major line is required, select it explicitly:
 
 ```bash
 podman build --pull=always \
@@ -176,27 +174,20 @@ podman build --pull=always \
   --file Dockerfile .build-context
 ```
 
-Record the exact Node.js version after the build because `current` is a moving tag. For a
-reproducible delivery, replace it with the exact tag published at that time.
+Record the exact Node.js version used for a delivery. The `current` tag moves over time, while a
+specific tag makes the build easier to reproduce.
 
-During the build, npm uses `NPM_CONFIG_PREFIX=/usr/local`, with audit, fund, progress, and
-update-notifier disabled. This makes the globally installed `knap` available at `/usr/local/bin`.
-
-To pin an approved Knap version:
+Docker equivalent of the recommended build:
 
 ```bash
-podman build --build-arg KNAP_VERSION=latest \
-  --tag localhost/delphix-implementation-toolkit:0.1.0 \
-  --file Dockerfile .build-context
-```
-
-Docker equivalent:
-
-```bash
-docker build --build-arg KNAP_VERSION=latest \
+docker build --pull \
   --tag delphix-implementation-toolkit:0.1.0 \
   --file Dockerfile .build-context
 ```
+
+The build configures npm to install global tools under `/usr/local` and disables npm audit, fund,
+progress, and update notifications. The default Knap version is `latest`; an approved version can
+be selected with `--build-arg KNAP_VERSION=<version>`.
 
 ## Masking Helper variables
 
@@ -277,10 +268,14 @@ sha256sum --check delphix-implementation-toolkit-0.1.0.tar.gz.sha256
 docker load --input delphix-implementation-toolkit-0.1.0.tar.gz
 ```
 
-## Environment configuration
+## DCT Toolkit and report configuration
 
-The following commands must be run by the user who performs the installation and runs Podman or
-Docker. Create the DCT configuration directory in that user's home directory:
+Masking Helper does not require `dct-toolkit` or a DCT properties file. Its Masking Engine URL,
+username, and password are configured through the GUI and stored in the helper SQLite database.
+
+The following configuration is required only when using `delphix_install_report` or the bundled DCT
+Toolkit. Run these commands as the user who performs the report operation with Podman or Docker.
+Create the DCT configuration directory in that user's home directory:
 
 ```bash
 mkdir -p "$HOME/.dct-toolkit"
@@ -329,12 +324,11 @@ sudo chown "$(id -u):$(id -g)" "$HOME/.dct-toolkit/dct-toolkit.properties"
 sudo chmod 0644 "$HOME/.dct-toolkit/dct-toolkit.properties"
 ```
 
-The file contains the DCT address and access token. Never include it in the Dockerfile, an `ARG`,
-an `ENV` variable, the repository, or a public image. During a one-off report execution, the host
-directory is mounted read-only at `/root/.dct-toolkit`. The report command intentionally runs as
-root inside the short-lived container so that the DCT Toolkit and the report renderer use one
-consistent configuration and can write to the host output directory. The permanent helper service
-continues to run as the internal `delphix` user.
+The file contains the DCT address and access token for report generation. Keep it outside the
+repository and the container image. When a report is generated, the host directory is mounted
+read-only at `/root/.dct-toolkit` inside the temporary report container. This temporary container
+runs as root so it can read the configuration and write the report to the host. The permanent
+Masking Helper service continues to run as the internal `delphix` user.
 
 Docker equivalent for generating the configuration:
 
@@ -352,7 +346,7 @@ docker run --rm -it \
   apiKey
 ```
 
-## Podman-managed volumes
+## Managed volumes
 
 ```bash
 podman volume create dlpx-helper-db
@@ -369,7 +363,7 @@ docker volume create dlpx-helper-files
 | Volume | Internal path | Purpose |
 |---|---|---|
 | `dlpx-helper-db` | `/opt/delphix-masking-helper/db` | SQLite and helper configuration |
-| `dlpx-helper-files` | `/home/delphix/test-files` | Local files and lookups |
+| `dlpx-helper-files` | `/opt/delphix-masking-helper/test-files` | Local files and lookups |
 
 ## Network and firewall
 
@@ -395,7 +389,7 @@ podman run --rm \
   --name delphix-masking-helper \
   --publish 3000:3000 \
   --volume dlpx-helper-db:/opt/delphix-masking-helper/db \
-  --volume dlpx-helper-files:/home/delphix/test-files \
+  --volume dlpx-helper-files:/opt/delphix-masking-helper/test-files \
   localhost/delphix-implementation-toolkit:0.1.0
 ```
 
@@ -414,7 +408,7 @@ docker run -d \
   --name delphix-masking-helper \
   --publish 3000:3000 \
   --volume dlpx-helper-db:/opt/delphix-masking-helper/db \
-  --volume dlpx-helper-files:/home/delphix/test-files \
+  --volume dlpx-helper-files:/opt/delphix-masking-helper/test-files \
   delphix-implementation-toolkit:0.1.0
 ```
 
@@ -442,7 +436,7 @@ Image=localhost/delphix-implementation-toolkit:0.1.0
 ContainerName=delphix-masking-helper
 PublishPort=3000:3000
 Volume=dlpx-helper-db:/opt/delphix-masking-helper/db
-Volume=dlpx-helper-files:/home/delphix/test-files
+Volume=dlpx-helper-files:/opt/delphix-masking-helper/test-files
 
 [Service]
 Restart=always
@@ -520,7 +514,8 @@ This Docker report command has not been functionally validated in this project.
 
 - The token is not included in the image.
 - The properties file is mounted read-only.
-- The process runs as `delphix`, not as root.
+- The permanent Masking Helper process runs as `delphix`, not as root. The one-off report container
+  intentionally runs as root to read the DCT configuration and write the report output.
 - The image contains licensed components and must use approved transfer channels.
 - Reports may contain sensitive configuration information.
 - At project completion, review transferred files and volumes before destroying the VM.
