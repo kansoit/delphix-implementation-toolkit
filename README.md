@@ -117,22 +117,12 @@ fails if any required JAR is missing from the official Devkit directory.
 cd delphix-implementation-toolkit
 chmod +x prepare-build-context.sh
 ./prepare-build-context.sh
-podman build --tag localhost/delphix-implementation-toolkit:0.1.0 --file Dockerfile .build-context
 ```
 
 The build and runtime validation documented in this project were performed with Podman on Oracle
 Linux 9. Docker is also supported by the same OCI image and equivalent Docker commands are
 provided for other Linux distributions, although the Docker execution path was not the primary
 validation environment for this project.
-
-Docker build equivalent:
-
-```bash
-docker build \
-  --tag delphix-implementation-toolkit:0.1.0 \
-  --file Dockerfile \
-  .build-context
-```
 
 The script copies only the required files. It does not copy `node_modules`, local SQLite databases,
 local test files, or the remainder of the Masking Devkit.
@@ -155,6 +145,8 @@ the Podman commands with their Docker equivalents.
 The build requires Internet access or an accessible mirror to download the base image, Debian
 Bookworm packages, npm dependencies, and Knap. The execution VM does not need Internet access after
 receiving the completed image.
+
+### Build commands
 
 Node.js is obtained from the official `node:current-bookworm-slim` base image, not from Debian
 packages. The recommended build always refreshes that base image:
