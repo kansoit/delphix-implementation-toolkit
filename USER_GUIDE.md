@@ -304,6 +304,26 @@ sudo podman run --rm \
     --profile-set "ASDD Spanish"
 ```
 
+Docker equivalent:
+
+```bash
+mkdir -p "$HOME/delphix-reports"
+sudo docker run --rm \
+  --user 0 \
+  --hostname dlpx-toolkit \
+  --add-host dlpx-toolkit:127.0.0.1 \
+  --network host \
+  --volume "$HOME/delphix-reports:/home/delphix/reports" \
+  --volume "$HOME/.dct-toolkit:/root/.dct-toolkit:ro" \
+  delphix-implementation-toolkit:<version> \
+  cc-install-report \
+    --client "Organization name" \
+    --prefix "0-" \
+    --output /home/delphix/reports/report.md \
+    --template /home/delphix/.local/bin/cc_install_report_sp.md \
+    --profile-set "ASDD Spanish"
+```
+
 The report is written to `$HOME/delphix-reports/report.md`.
 
 The one-off report container runs as root only inside the short-lived container. Its DCT Toolkit
