@@ -336,6 +336,40 @@ Logs:
 sudo journalctl -u delphix-masking-helper.service -f
 ```
 
+## Servicio con Docker Compose
+
+Docker no utiliza Quadlet. Para mantener el helper como un servicio Docker, crear
+`docker-compose.yml`:
+
+```yaml
+services:
+  masking-helper:
+    image: delphix-implementation-toolkit:<version>
+    container_name: delphix-masking-helper
+    ports:
+      - "3000:3000"
+    volumes:
+      - dlpx-helper-db:/opt/delphix-masking-helper/db
+      - dlpx-helper-files:/home/delphix/test-files
+    restart: unless-stopped
+
+volumes:
+  dlpx-helper-db:
+  dlpx-helper-files:
+```
+
+Antes de iniciar Compose, verificar que no haya un helper manual o Quadlet en ejecución:
+
+```bash
+sudo docker compose -f docker-compose.yml up -d
+sudo docker compose -f docker-compose.yml ps
+sudo docker compose -f docker-compose.yml logs -f masking-helper
+sudo docker compose -f docker-compose.yml down
+```
+
+Los volúmenes administrados se conservan al ejecutar `down`. No agregar `--volumes` salvo que la
+configuración y los archivos locales del helper ya no sean necesarios.
+
 ## Generar un reporte de instalación
 
 El reporte se ejecuta bajo demanda, con el helper detenido o funcionando indistintamente:
