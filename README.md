@@ -124,6 +124,22 @@ Linux 9. Docker is also supported by the same OCI image and equivalent Docker co
 provided for other Linux distributions, although the Docker execution path was not the primary
 validation environment for this project.
 
+Build with Podman:
+
+```bash
+podman build --pull=always \
+  --tag localhost/delphix-implementation-toolkit:0.1.0 \
+  --file Dockerfile .build-context
+```
+
+Build with Docker:
+
+```bash
+docker build --pull \
+  --tag delphix-implementation-toolkit:0.1.0 \
+  --file Dockerfile .build-context
+```
+
 The script copies only the required files. It does not copy `node_modules`, local SQLite databases,
 local test files, or the remainder of the Masking Devkit.
 
@@ -146,16 +162,8 @@ The build requires Internet access or an accessible mirror to download the base 
 Bookworm packages, npm dependencies, and Knap. The execution VM does not need Internet access after
 receiving the completed image.
 
-### Build commands
-
 Node.js is obtained from the official `node:current-bookworm-slim` base image, not from Debian
-packages. The recommended build always refreshes that base image:
-
-```bash
-podman build --pull=always \
-  --tag localhost/delphix-implementation-toolkit:0.1.0 \
-  --file Dockerfile .build-context
-```
+packages. The Podman command above refreshes that base image on every build.
 
 If a specific Node.js major line is required, select it explicitly:
 
@@ -168,14 +176,6 @@ podman build --pull=always \
 
 Record the exact Node.js version used for a delivery. The `current` tag moves over time, while a
 specific tag makes the build easier to reproduce.
-
-Docker equivalent of the recommended build:
-
-```bash
-docker build --pull \
-  --tag delphix-implementation-toolkit:0.1.0 \
-  --file Dockerfile .build-context
-```
 
 The build configures npm to install global tools under `/usr/local` and disables npm audit, fund,
 progress, and update notifications. The default Knap version is `latest`; an approved version can
