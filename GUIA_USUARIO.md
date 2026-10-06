@@ -158,6 +158,8 @@ sudo docker run --rm -it \
 El archivo contiene la dirección de DCT y el token correspondiente al entorno. No es necesario
 modificar la imagen para cambiar estos valores.
 
+## Volúmenes
+
 Estos volúmenes no se crean durante la construcción de la imagen. Masking Helper los utiliza durante
 la ejecución para conservar datos locales:
 
@@ -166,8 +168,6 @@ la ejecución para conservar datos locales:
 
 Se montan en `/opt/delphix-masking-helper/db` y `/home/delphix/test-files`,
 respectivamente.
-
-## Volúmenes
 
 Crear los volúmenes administrados por Podman:
 

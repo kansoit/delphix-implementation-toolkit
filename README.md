@@ -348,6 +348,8 @@ docker run --rm -it \
   apiKey
 ```
 
+## Managed volumes
+
 The image build does not create or require these volumes. At runtime, Masking Helper uses two
 managed volumes to retain its local data:
 
@@ -355,8 +357,6 @@ managed volumes to retain its local data:
 - `dlpx-helper-files` for server files and lookup files.
 
 They are mounted at `/opt/delphix-masking-helper/db` and `/home/delphix/test-files`, respectively.
-
-## Managed volumes
 
 ```bash
 podman volume create dlpx-helper-db
