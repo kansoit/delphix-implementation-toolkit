@@ -152,8 +152,7 @@ to retain local data:
 - `dlpx-helper-db` stores the SQLite database and helper configuration.
 - `dlpx-helper-files` stores server files and lookup files.
 
-They are mounted at `/opt/delphix-masking-helper/db` and
-`/opt/delphix-masking-helper/test-files`, respectively.
+They are mounted at `/opt/delphix-masking-helper/db` and `/home/delphix/test-files`, respectively.
 
 ## Volumes
 
@@ -165,7 +164,7 @@ sudo podman volume create dlpx-helper-files
 | Volume | Contents |
 |---|---|
 | `dlpx-helper-db` | `/opt/delphix-masking-helper/db` — SQLite configuration and saved algorithms |
-| `dlpx-helper-files` | `/opt/delphix-masking-helper/test-files` — server files and lookups |
+| `dlpx-helper-files` | `/home/delphix/test-files` — server files and lookups |
 
 ## Network and firewall
 
@@ -193,7 +192,7 @@ sudo podman run --rm \
   --name delphix-masking-helper \
   --publish 3000:3000 \
   --volume dlpx-helper-db:/opt/delphix-masking-helper/db \
-  --volume dlpx-helper-files:/opt/delphix-masking-helper/test-files \
+  --volume dlpx-helper-files:/home/delphix/test-files \
   localhost/delphix-implementation-toolkit:<version>
 ```
 
@@ -214,7 +213,7 @@ sudo docker run -d \
   --name delphix-masking-helper \
   --publish 3000:3000 \
   --volume dlpx-helper-db:/opt/delphix-masking-helper/db \
-  --volume dlpx-helper-files:/opt/delphix-masking-helper/test-files \
+  --volume dlpx-helper-files:/home/delphix/test-files \
   delphix-implementation-toolkit:<version>
 sudo docker logs delphix-masking-helper
 ```
@@ -228,6 +227,16 @@ On an isolated network, preferably enter the Masking Engine IP address instead o
 the VM has verified DNS resolution. Include the protocol and port required by the environment.
 
 Do not define these credentials in the Dockerfile or host environment variables.
+
+After the helper is running, open `Settings > General` in the GUI and set **Server file directory**
+to:
+
+```text
+/home/delphix/test-files
+```
+
+This is where the lookup files live. Use the absolute path above so it matches the mounted
+`dlpx-helper-files` volume.
 
 ## Permanent service with Quadlet
 
@@ -253,7 +262,7 @@ Image=localhost/delphix-implementation-toolkit:<version>
 ContainerName=delphix-masking-helper
 PublishPort=3000:3000
 Volume=dlpx-helper-db:/opt/delphix-masking-helper/db
-Volume=dlpx-helper-files:/opt/delphix-masking-helper/test-files
+Volume=dlpx-helper-files:/home/delphix/test-files
 Environment=PORT=3000
 
 [Service]

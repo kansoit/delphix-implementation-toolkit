@@ -152,7 +152,7 @@ execução para conservar dados locais:
 - `dlpx-helper-db` armazena o banco SQLite e a configuração do helper.
 - `dlpx-helper-files` armazena os arquivos do servidor e os lookups.
 
-Eles são montados em `/opt/delphix-masking-helper/db` e `/opt/delphix-masking-helper/test-files`,
+Eles são montados em `/opt/delphix-masking-helper/db` e `/home/delphix/test-files`,
 respectivamente.
 
 ## Volumes
@@ -172,7 +172,7 @@ sudo docker volume create dlpx-helper-files
 | Volume | Conteúdo |
 |---|---|
 | `dlpx-helper-db` | `/opt/delphix-masking-helper/db` — configuração SQLite e algoritmos salvos |
-| `dlpx-helper-files` | `/opt/delphix-masking-helper/test-files` — arquivos do servidor e lookups |
+| `dlpx-helper-files` | `/home/delphix/test-files` — arquivos do servidor e lookups |
 
 ## Rede e firewall
 
@@ -201,7 +201,7 @@ sudo podman run --rm \
   --name delphix-masking-helper \
   --publish 3000:3000 \
   --volume dlpx-helper-db:/opt/delphix-masking-helper/db \
-  --volume dlpx-helper-files:/opt/delphix-masking-helper/test-files \
+  --volume dlpx-helper-files:/home/delphix/test-files \
   localhost/delphix-implementation-toolkit:<version>
 ```
 
@@ -222,7 +222,7 @@ sudo docker run -d \
   --name delphix-masking-helper \
   --publish 3000:3000 \
   --volume dlpx-helper-db:/opt/delphix-masking-helper/db \
-  --volume dlpx-helper-files:/opt/delphix-masking-helper/test-files \
+  --volume dlpx-helper-files:/home/delphix/test-files \
   delphix-implementation-toolkit:<version>
 sudo docker logs delphix-masking-helper
 ```
@@ -237,6 +237,16 @@ quando a VM tiver a resolução DNS verificada. Inclua na URL o protocolo e a po
 ambiente.
 
 Não defina essas credenciais no Dockerfile nem nas variáveis de ambiente do host.
+
+Depois que o helper estiver em funcionamento, abra `Settings > General` na GUI e defina **Server
+file directory** com o valor:
+
+```text
+/home/delphix/test-files
+```
+
+Este é o diretório onde ficam os lookup files. Use o caminho absoluto para que ele corresponda ao
+volume montado `dlpx-helper-files`.
 
 ## Serviço permanente com Quadlet
 
@@ -265,7 +275,7 @@ Image=localhost/delphix-implementation-toolkit:<version>
 ContainerName=delphix-masking-helper
 PublishPort=3000:3000
 Volume=dlpx-helper-db:/opt/delphix-masking-helper/db
-Volume=dlpx-helper-files:/opt/delphix-masking-helper/test-files
+Volume=dlpx-helper-files:/home/delphix/test-files
 Environment=PORT=3000
 
 [Service]
