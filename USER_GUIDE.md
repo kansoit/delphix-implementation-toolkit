@@ -9,9 +9,9 @@ Python, npm, jq, and Knap do not need to be installed on the operating system.
 
 ## Requirements
 
-- RHEL 9.x, Oracle Linux 9.x, or compatible Linux.
+- Any compatible Linux distribution with Podman or Docker Engine installed.
 - x86-64 architecture.
-- Podman installed.
+- Podman or Docker Engine installed.
 - Network access from the VM to DCT and, when applicable, the Masking Engine.
 - Image archive `delphix-implementation-toolkit-<version>.tar.gz`.
 
@@ -20,12 +20,45 @@ Python, npm, jq, and Knap do not need to be installed on the operating system.
 On a VM with enabled repositories:
 
 ```bash
-sudo dnf install -y podman
+sudo dnf install -y podman fuse-overlayfs slirp4netns
 podman --version
-podman info
+sudo podman info
 ```
 
 On an isolated VM, obtain Podman and its dependencies through the approved offline procedure.
+
+## Install Docker Engine
+
+On Debian, install Docker Engine from Docker's official repository:
+
+```bash
+sudo apt-get update
+sudo apt-get install -y ca-certificates curl
+sudo install -m 0755 -d /etc/apt/keyrings
+sudo curl -fsSL https://download.docker.com/linux/debian/gpg \
+  -o /etc/apt/keyrings/docker.asc
+sudo chmod a+r /etc/apt/keyrings/docker.asc
+
+sudo tee /etc/apt/sources.list.d/docker.sources > /dev/null <<EOF
+Types: deb
+URIs: https://download.docker.com/linux/debian
+Suites: $(. /etc/os-release && echo "$VERSION_CODENAME")
+Components: stable
+Architectures: $(dpkg --print-architecture)
+Signed-By: /etc/apt/keyrings/docker.asc
+EOF
+
+sudo apt-get update
+sudo apt-get install -y docker-ce docker-ce-cli containerd.io \
+  docker-buildx-plugin docker-compose-plugin
+sudo systemctl enable --now docker
+sudo docker run hello-world
+```
+
+For other distributions, follow Docker's official installation procedure for that distribution.
+
+Use either Podman or Docker for the commands below. Do not run both helper containers at the same
+time with the same published port and volumes.
 
 ## Load the image
 
@@ -42,10 +75,17 @@ gunzip -c delphix-implementation-toolkit-<version>.tar.gz | podman load
 podman images
 ```
 
+Docker equivalent:
+
+```bash
+gunzip -c delphix-implementation-toolkit-<version>.tar.gz | sudo docker load
+sudo docker images
+```
+
 ## DCT configuration
 
-Run the following commands as the user who performs the installation and runs Podman. Create the
-DCT configuration directory in that user's home directory:
+Run the following commands as the user who performs the installation and runs Podman or Docker.
+Create the DCT configuration directory in that user's home directory:
 
 ```bash
 mkdir -p "$HOME/.dct-toolkit"
@@ -85,6 +125,22 @@ sudo podman run --rm -it \
 
 For a lab DCT with a self-signed certificate, append `--insecureSSL` to `create_config`.
 
+Docker equivalent:
+
+```bash
+sudo docker run --rm -it \
+  --user 0 \
+  --hostname dlpx-toolkit \
+  --add-host dlpx-toolkit:127.0.0.1 \
+  --network host \
+  --volume "$HOME/.dct-toolkit:/root/.dct-toolkit" \
+  delphix-implementation-toolkit:<version> \
+  /home/delphix/.local/bin/dct-toolkit \
+  create_config \
+  dctUrl="https://DCT_HOSTNAME_OR_IP/dct" \
+  apiKey
+```
+
 The file contains the DCT address and environment access token. The image does not need to be
 modified when these values change.
 
@@ -105,8 +161,8 @@ podman volume create dlpx-helper-files
 The container also needs outbound connectivity to DCT and, when applicable, to the Masking Engine.
 The required destination ports must be allowed by the environment's network controls.
 
-If the GUI must be accessed from another machine and RHEL or Oracle Linux uses `firewalld`, open
-only the published port:
+If the GUI must be accessed from another machine and the host uses `firewalld`, open only the
+published port:
 
 ```bash
 sudo firewall-cmd --permanent --add-port=3000/tcp
@@ -138,6 +194,18 @@ Open `http://<vm-ip>:3000` and verify:
 ```bash
 curl --fail http://127.0.0.1:3000/api/version
 podman logs delphix-masking-helper
+```
+
+Docker equivalent:
+
+```bash
+sudo docker run -d \
+  --name delphix-masking-helper \
+  --publish 3000:3000 \
+  --volume dlpx-helper-db:/opt/delphix-masking-helper/db \
+  --volume dlpx-helper-files:/home/delphix/test-files \
+  delphix-implementation-toolkit:<version>
+sudo docker logs delphix-masking-helper
 ```
 
 ## Configure the Masking Engine through the GUI
@@ -233,6 +301,14 @@ curl --fail http://127.0.0.1:3000/api/version
 podman volume ls
 ```
 
+With Docker:
+
+```bash
+sudo docker ps -a
+sudo docker logs delphix-masking-helper
+sudo docker volume ls
+```
+
 For Quadlet logs, use `sudo journalctl -u delphix-masking-helper.service -f`.
 
 If the report fails, verify that the properties file exists, matches the environment, that the VM
@@ -245,6 +321,13 @@ procedures:
 
 ```bash
 podman volume rm dlpx-helper-db dlpx-helper-files
+rm -f "$HOME/.dct-toolkit/dct-toolkit.properties"
+```
+
+With Docker:
+
+```bash
+sudo docker volume rm dlpx-helper-db dlpx-helper-files
 rm -f "$HOME/.dct-toolkit/dct-toolkit.properties"
 ```
 

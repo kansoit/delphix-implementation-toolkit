@@ -6,7 +6,8 @@ The OCI image includes `delphix-masking-helper`, `delphix_install_report`, `dct-
 Java 17 JRE, Python 3, `jq`, Knap, and the licensed JAR files required by the Masking Devkit.
 
 The execution host does not need Java, Node.js, Python, npm, jq, or Knap installed. It only needs a
-container runtime. Podman on RHEL or Oracle Linux 9 is the validated runtime for this project.
+container runtime. The image was created and functionally tested with Podman on Oracle Linux 9. As
+an OCI image, it is expected to run on other Linux distributions with either Podman or Docker.
 
 ## Scope
 
@@ -25,19 +26,18 @@ The image is shared across environments. Environment-specific information remain
 ## Architecture
 
 ```text
-Podman on RHEL/OL 9
-└── delphix-implementation-toolkit
-    ├── HTTP service: delphix-masking-helper :3000
-    ├── /home/delphix/.local/bin/cc-install-report
-    ├── /home/delphix/.local/bin/cc_install_report.py
-    ├── /home/delphix/.local/bin/cc_install_report_fetch.py
-    ├── /home/delphix/.local/bin/cc_install_report_render.py
-    └── /home/delphix/.local/bin/cc_install_report_*.md
-    ├── /home/delphix/.local/bin/dct-toolkit
-    ├── Java 17 JRE
-    ├── Node.js 22 + Knap
-    ├── Python 3 + jq
-    └── Masking Devkit JAR files
+delphix-implementation-toolkit
+├── HTTP service: delphix-masking-helper :3000
+├── /home/delphix/.local/bin/cc-install-report
+├── /home/delphix/.local/bin/cc_install_report.py
+├── /home/delphix/.local/bin/cc_install_report_fetch.py
+├── /home/delphix/.local/bin/cc_install_report_render.py
+├── /home/delphix/.local/bin/cc_install_report_*.md
+├── /home/delphix/.local/bin/dct-toolkit
+├── Java 17 JRE
+├── Node.js 22 + Knap
+├── Python 3 + jq
+└── Masking Devkit JAR files
 
 External environment configuration
 └── $HOME/.dct-toolkit/dct-toolkit.properties
@@ -50,9 +50,9 @@ The process inside the container runs as the unprivileged `delphix` user.
 
 The VM must have:
 
-- RHEL 9.x, Oracle Linux 9.x, or a compatible Linux distribution.
+- Any compatible Linux distribution with Podman or Docker installed.
 - x86-64 architecture for the current `dct-toolkit` build.
-- Podman installed from repositories approved for the environment.
+- Podman or Docker installed according to the operating system's approved package procedure.
 - Network connectivity to DCT and, when applicable, to the Masking Engine.
 - Enough space for the image, volumes, and reports.
 
@@ -121,9 +121,10 @@ chmod +x prepare-build-context.sh
 podman build --tag localhost/delphix-implementation-toolkit:0.1.0 --file Dockerfile .build-context
 ```
 
-The build and runtime validation documented in this project were performed with Podman. Docker is
-also supported by the same Dockerfile, but equivalent Docker commands have not been functionally
-validated in this project.
+The build and runtime validation documented in this project were performed with Podman on Oracle
+Linux 9. Docker is also supported by the same OCI image and equivalent Docker commands are
+provided for other Linux distributions, although the Docker execution path was not the primary
+validation environment for this project.
 
 Docker build equivalent:
 
@@ -186,6 +187,14 @@ To pin an approved Knap version:
 ```bash
 podman build --build-arg KNAP_VERSION=latest \
   --tag localhost/delphix-implementation-toolkit:0.1.0 \
+  --file Dockerfile .build-context
+```
+
+Docker equivalent:
+
+```bash
+docker build --build-arg KNAP_VERSION=latest \
+  --tag delphix-implementation-toolkit:0.1.0 \
   --file Dockerfile .build-context
 ```
 
@@ -270,8 +279,8 @@ docker load --input delphix-implementation-toolkit-0.1.0.tar.gz
 
 ## Environment configuration
 
-The following commands must be run by the user who performs the installation and runs Podman.
-Create the DCT configuration directory in that user's home directory:
+The following commands must be run by the user who performs the installation and runs Podman or
+Docker. Create the DCT configuration directory in that user's home directory:
 
 ```bash
 mkdir -p "$HOME/.dct-toolkit"
@@ -327,11 +336,34 @@ root inside the short-lived container so that the DCT Toolkit and the report ren
 consistent configuration and can write to the host output directory. The permanent helper service
 continues to run as the internal `delphix` user.
 
+Docker equivalent for generating the configuration:
+
+```bash
+docker run --rm -it \
+  --user 0 \
+  --hostname dlpx-toolkit \
+  --add-host dlpx-toolkit:127.0.0.1 \
+  --network host \
+  --volume "$HOME/.dct-toolkit:/root/.dct-toolkit:Z" \
+  delphix-implementation-toolkit:0.1.0 \
+  /home/delphix/.local/bin/dct-toolkit \
+  create_config \
+  dctUrl="https://DCT_HOSTNAME_OR_IP/dct" \
+  apiKey
+```
+
 ## Podman-managed volumes
 
 ```bash
 podman volume create dlpx-helper-db
 podman volume create dlpx-helper-files
+```
+
+Docker equivalent:
+
+```bash
+docker volume create dlpx-helper-db
+docker volume create dlpx-helper-files
 ```
 
 | Volume | Internal path | Purpose |
@@ -344,8 +376,8 @@ podman volume create dlpx-helper-files
 The container also needs outbound connectivity to DCT and, when applicable, to the Masking Engine.
 The required destination ports must be allowed by the network controls for the environment.
 
-If the GUI must be accessed from another machine and the host uses RHEL or Oracle Linux with
-`firewalld`, open only the published port:
+If the GUI must be accessed from another machine and the host uses `firewalld`, open only the
+published port:
 
 ```bash
 sudo firewall-cmd --permanent --add-port=3000/tcp
@@ -393,8 +425,11 @@ The Docker command is provided for portability; the helper was functionally test
 Before activating this service, verify that no manual execution is active. If one is active, stop it
 with `podman stop delphix-masking-helper`.
 
-Rootful Quadlet definitions belong in `/etc/containers/systemd/`. The rootless location
-`~/.config/containers/systemd/` is different.
+For a rootful Quadlet service on a systemd-based Linux host, place the definition in
+`/etc/containers/systemd/`. The rootless location `~/.config/containers/systemd/` is different.
+
+Quadlet is specific to Podman. Docker does not use Quadlet; use the Docker manual execution example
+or an equivalent Docker Compose/service definition.
 
 ```ini
 [Unit]
@@ -495,10 +530,10 @@ This Docker report command has not been functionally validated in this project.
 - The current `dct-toolkit` build is a Linux x86-64 static binary.
 - The image targets x86-64 hosts.
 - The VM needs network access to DCT; the container does not remove this dependency.
-- Podman must be available on the host. If not, prepare its RPM packages and dependencies offline.
+- Podman or Docker must be available on the host. If the host is isolated, prepare the selected
+  runtime and its dependencies through the approved offline procedure.
 - The OCI image does not declare `HEALTHCHECK`; validate with `curl /api/version` and
   `systemctl`/`journalctl` when using Quadlet.
-- VMware only hosts the Linux VM where Podman runs; the image does not depend on VMware version.
 
 ## Pending validations
 
@@ -506,5 +541,5 @@ This Docker report command has not been functionally validated in this project.
 2. Verify Node.js, Java, Python, jq, Knap, and `dct-toolkit` inside the container.
 3. Test the helper against a Delphix laboratory environment.
 4. Test the report with a non-production properties file.
-5. Export the image, load it offline, and repeat the test on RHEL/OL 9.
+5. Export the image, load it offline, and repeat the test on the target operating system.
 6. Validate Quadlet and SELinux on the target operating system.
