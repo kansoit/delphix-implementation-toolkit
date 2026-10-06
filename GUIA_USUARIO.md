@@ -208,6 +208,20 @@ sudo firewall-cmd --list-ports
 Para una prueba temporal puede omitirse `--permanent`. No se recomienda apagar `firewalld`
 completamente; cuando la política del entorno lo permita, restringir el acceso a la red de origen.
 
+Si el host utiliza `ufw`, permitir el puerto publicado y verificar las reglas activas:
+
+```bash
+sudo ufw allow 3000/tcp
+sudo ufw status verbose
+```
+
+Cuando sea posible, restringir la regla a la red de origen requerida. Para una prueba temporal,
+eliminarla después con:
+
+```bash
+sudo ufw delete allow 3000/tcp
+```
+
 ## Iniciar el Masking Helper
 
 Para una prueba manual:

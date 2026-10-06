@@ -392,6 +392,20 @@ sudo firewall-cmd --list-ports
 For a temporary test, the rule may be added without `--permanent`. Do not disable `firewalld`
 completely; restrict access to the required source network when the environment policy permits it.
 
+If the host uses `ufw`, allow the published port and verify the active rules:
+
+```bash
+sudo ufw allow 3000/tcp
+sudo ufw status verbose
+```
+
+When possible, restrict the rule to the required source network instead of allowing all sources.
+For a temporary test, remove the rule afterwards with:
+
+```bash
+sudo ufw delete allow 3000/tcp
+```
+
 ## Manual helper execution
 
 ```bash

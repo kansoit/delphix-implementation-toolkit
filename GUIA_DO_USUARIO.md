@@ -192,6 +192,20 @@ sudo firewall-cmd --list-ports
 Para um teste temporário, omita `--permanent`. Não desative o `firewalld` completamente; restrinja
 o acesso à rede de origem necessária quando a política do ambiente permitir.
 
+Se o host usar `ufw`, permita a porta publicada e verifique as regras ativas:
+
+```bash
+sudo ufw allow 3000/tcp
+sudo ufw status verbose
+```
+
+Quando possível, restrinja a regra à rede de origem necessária. Para um teste temporário, remova-a
+depois com:
+
+```bash
+sudo ufw delete allow 3000/tcp
+```
+
 ## Iniciar o Masking Helper
 
 Para um teste manual:
