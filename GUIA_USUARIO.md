@@ -196,6 +196,8 @@ El contenedor también necesita conectividad de salida hacia DCT y, cuando corre
 Masking Engine. Los puertos de destino requeridos deben estar permitidos por los controles de red
 del entorno.
 
+### firewalld
+
 Si la interfaz debe utilizarse desde otra máquina y el host utiliza `firewalld`, abrir solamente el
 puerto publicado:
 
@@ -207,6 +209,8 @@ sudo firewall-cmd --list-ports
 
 Para una prueba temporal puede omitirse `--permanent`. No se recomienda apagar `firewalld`
 completamente; cuando la política del entorno lo permita, restringir el acceso a la red de origen.
+
+### ufw
 
 Si el host utiliza `ufw`, permitir el puerto publicado y verificar las reglas activas:
 

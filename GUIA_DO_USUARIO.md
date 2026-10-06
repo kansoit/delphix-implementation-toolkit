@@ -180,6 +180,8 @@ O contêiner também precisa de conectividade de saída para o DCT e, quando apl
 Masking Engine. As portas de destino necessárias devem ser permitidas pelos controles de rede do
 ambiente.
 
+### firewalld
+
 Se a GUI precisar ser acessada de outra máquina e o host usar `firewalld`, abra somente a porta
 publicada:
 
@@ -191,6 +193,8 @@ sudo firewall-cmd --list-ports
 
 Para um teste temporário, omita `--permanent`. Não desative o `firewalld` completamente; restrinja
 o acesso à rede de origem necessária quando a política do ambiente permitir.
+
+### ufw
 
 Se o host usar `ufw`, permita a porta publicada e verifique as regras ativas:
 

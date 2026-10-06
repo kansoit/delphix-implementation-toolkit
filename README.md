@@ -380,6 +380,8 @@ docker volume create dlpx-helper-files
 The container also needs outbound connectivity to DCT and, when applicable, to the Masking Engine.
 The required destination ports must be allowed by the network controls for the environment.
 
+### firewalld
+
 If the GUI must be accessed from another machine and the host uses `firewalld`, open only the
 published port:
 
@@ -391,6 +393,8 @@ sudo firewall-cmd --list-ports
 
 For a temporary test, the rule may be added without `--permanent`. Do not disable `firewalld`
 completely; restrict access to the required source network when the environment policy permits it.
+
+### ufw
 
 If the host uses `ufw`, allow the published port and verify the active rules:
 

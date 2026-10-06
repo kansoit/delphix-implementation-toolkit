@@ -171,6 +171,8 @@ sudo podman volume create dlpx-helper-files
 The container also needs outbound connectivity to DCT and, when applicable, to the Masking Engine.
 The required destination ports must be allowed by the environment's network controls.
 
+### firewalld
+
 If the GUI must be accessed from another machine and the host uses `firewalld`, open only the
 published port:
 
@@ -182,6 +184,8 @@ sudo firewall-cmd --list-ports
 
 For a temporary test, omit `--permanent`. Do not disable `firewalld` completely; restrict access
 to the required source network when permitted by the environment policy.
+
+### ufw
 
 If the host uses `ufw`, allow the published port and verify the active rules:
 
