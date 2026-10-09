@@ -1,0 +1,16 @@
+services:
+  delphix-masking-helper:
+    image: localhost/delphix-implementation-toolkit:2.6.0
+    container_name: delphix-masking-helper
+    restart: unless-stopped
+    ports:
+      - "3000:3000"
+    volumes:
+      - dlpx-helper-db:/opt/delphix-masking-helper/db
+      - dlpx-helper-files:/home/delphix/test-files
+
+volumes:
+  dlpx-helper-db:
+    name: dlpx-helper-db
+  dlpx-helper-files:
+    name: dlpx-helper-files

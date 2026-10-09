@@ -113,6 +113,18 @@ fails if any required JAR is missing from the official Devkit directory.
 
 ## Building the image
 
+Before preparing the build context, select the required release of the Masking Helper. The helper
+repository must be available next to this repository at `../delphix-masking-helper`. The update
+script checks for local changes, fetches the tags, checks out the requested release in detached
+HEAD state, verifies the package version, and prepares the build context:
+
+```bash
+./update-masking-helper.sh v2.6.0
+```
+
+The script never stashes or deletes local changes. If local changes exist, preserve them first and
+run the script again. The default release is `v2.6.0` when no argument is supplied.
+
 ```bash
 cd delphix-implementation-toolkit
 chmod +x prepare-build-context.sh
@@ -128,7 +140,7 @@ Build with Podman:
 
 ```bash
 podman build --pull=always \
-  --tag localhost/delphix-implementation-toolkit:0.1.0 \
+  --tag localhost/delphix-implementation-toolkit:2.6.0 \
   --file Dockerfile .build-context
 ```
 
@@ -136,7 +148,7 @@ Build with Docker:
 
 ```bash
 docker build --pull \
-  --tag delphix-implementation-toolkit:0.1.0 \
+  --tag delphix-implementation-toolkit:2.6.0 \
   --file Dockerfile .build-context
 ```
 
@@ -170,7 +182,7 @@ If a specific Node.js major line is required, select it explicitly:
 ```bash
 podman build --pull=always \
   --build-arg NODE_IMAGE=node:24-bookworm-slim \
-  --tag localhost/delphix-implementation-toolkit:0.1.0 \
+  --tag localhost/delphix-implementation-toolkit:2.6.0 \
   --file Dockerfile .build-context
 ```
 
@@ -213,7 +225,7 @@ Environment=PORT=3000
 
 ```bash
 podman run --rm --entrypoint bash \
-  localhost/delphix-implementation-toolkit:0.1.0 \
+  localhost/delphix-implementation-toolkit:2.6.0 \
   -lc 'node --version; java -version; python3 --version; jq --version; knap --version; /home/delphix/.local/bin/dct-toolkit --help || true'
 ```
 
@@ -221,7 +233,7 @@ Verify the JAR files as well:
 
 ```bash
 podman run --rm --entrypoint bash \
-  localhost/delphix-implementation-toolkit:0.1.0 \
+  localhost/delphix-implementation-toolkit:2.6.0 \
   -lc 'find /opt/delphix-masking-helper/lib -maxdepth 1 -name "*.jar" -printf "%f\\n" | sort'
 ```
 
@@ -229,45 +241,45 @@ Docker equivalents:
 
 ```bash
 docker run --rm --entrypoint bash \
-  delphix-implementation-toolkit:0.1.0 \
+  delphix-implementation-toolkit:2.6.0 \
   -lc 'node --version; java -version; python3 --version; jq --version; knap --version; /home/delphix/.local/bin/dct-toolkit --help || true'
 
 docker run --rm --entrypoint bash \
-  delphix-implementation-toolkit:0.1.0 \
+  delphix-implementation-toolkit:2.6.0 \
   -lc 'find /opt/delphix-masking-helper/lib -maxdepth 1 -name "*.jar" -printf "%f\\n" | sort'
 ```
 
 ## Offline export
 
 ```bash
-podman save --output delphix-implementation-toolkit-0.1.0.tar \
-  localhost/delphix-implementation-toolkit:0.1.0
-gzip -9 delphix-implementation-toolkit-0.1.0.tar
-sha256sum delphix-implementation-toolkit-0.1.0.tar.gz > delphix-implementation-toolkit-0.1.0.tar.gz.sha256
+podman save --output delphix-implementation-toolkit-2.6.0.tar \
+  localhost/delphix-implementation-toolkit:2.6.0
+gzip -9 delphix-implementation-toolkit-2.6.0.tar
+sha256sum delphix-implementation-toolkit-2.6.0.tar.gz > delphix-implementation-toolkit-2.6.0.tar.gz.sha256
 ```
 
 On the execution VM:
 
 ```bash
-sha256sum --check delphix-implementation-toolkit-0.1.0.tar.gz.sha256
-gunzip -c delphix-implementation-toolkit-0.1.0.tar.gz | podman load
+sha256sum --check delphix-implementation-toolkit-2.6.0.tar.gz.sha256
+gunzip -c delphix-implementation-toolkit-2.6.0.tar.gz | podman load
 ```
 
 Docker export/import equivalent:
 
 ```bash
 docker save \
-  --output delphix-implementation-toolkit-0.1.0.tar \
-  delphix-implementation-toolkit:0.1.0
-gzip -9 delphix-implementation-toolkit-0.1.0.tar
-sha256sum delphix-implementation-toolkit-0.1.0.tar.gz > delphix-implementation-toolkit-0.1.0.tar.gz.sha256
+  --output delphix-implementation-toolkit-2.6.0.tar \
+  delphix-implementation-toolkit:2.6.0
+gzip -9 delphix-implementation-toolkit-2.6.0.tar
+sha256sum delphix-implementation-toolkit-2.6.0.tar.gz > delphix-implementation-toolkit-2.6.0.tar.gz.sha256
 ```
 
 On the execution host:
 
 ```bash
-sha256sum --check delphix-implementation-toolkit-0.1.0.tar.gz.sha256
-docker load --input delphix-implementation-toolkit-0.1.0.tar.gz
+sha256sum --check delphix-implementation-toolkit-2.6.0.tar.gz.sha256
+docker load --input delphix-implementation-toolkit-2.6.0.tar.gz
 ```
 
 ## DCT Toolkit and report configuration
@@ -308,7 +320,7 @@ sudo podman run --rm -it \
   --add-host dlpx-toolkit:127.0.0.1 \
   --network host \
   --volume "$HOME/.dct-toolkit:/root/.dct-toolkit:Z" \
-  localhost/delphix-implementation-toolkit:0.1.0 \
+  localhost/delphix-implementation-toolkit:2.6.0 \
   /home/delphix/.local/bin/dct-toolkit \
   create_config \
   dctUrl="https://DCT_HOSTNAME_OR_IP/dct" \
@@ -341,7 +353,7 @@ docker run --rm -it \
   --add-host dlpx-toolkit:127.0.0.1 \
   --network host \
   --volume "$HOME/.dct-toolkit:/root/.dct-toolkit:Z" \
-  delphix-implementation-toolkit:0.1.0 \
+  delphix-implementation-toolkit:2.6.0 \
   /home/delphix/.local/bin/dct-toolkit \
   create_config \
   dctUrl="https://DCT_HOSTNAME_OR_IP/dct" \
@@ -418,7 +430,7 @@ podman run --rm \
   --publish 3000:3000 \
   --volume dlpx-helper-db:/opt/delphix-masking-helper/db \
   --volume dlpx-helper-files:/home/delphix/test-files \
-  localhost/delphix-implementation-toolkit:0.1.0
+  localhost/delphix-implementation-toolkit:2.6.0
 ```
 
 Manual execution and the Quadlet service must not be active at the same time. Stop one mode before
@@ -437,7 +449,7 @@ docker run -d \
   --publish 3000:3000 \
   --volume dlpx-helper-db:/opt/delphix-masking-helper/db \
   --volume dlpx-helper-files:/home/delphix/test-files \
-  delphix-implementation-toolkit:0.1.0
+  delphix-implementation-toolkit:2.6.0
 ```
 
 The Docker command is provided for portability; the helper was functionally tested with Podman.
@@ -460,7 +472,7 @@ After=network-online.target
 Wants=network-online.target
 
 [Container]
-Image=localhost/delphix-implementation-toolkit:0.1.0
+Image=localhost/delphix-implementation-toolkit:2.6.0
 ContainerName=delphix-masking-helper
 PublishPort=3000:3000
 Volume=dlpx-helper-db:/opt/delphix-masking-helper/db
@@ -492,7 +504,7 @@ Docker does not use Quadlet. To keep the helper running as a Docker service, cre
 ```yaml
 services:
   masking-helper:
-    image: delphix-implementation-toolkit:0.1.0
+    image: delphix-implementation-toolkit:2.6.0
     container_name: delphix-masking-helper
     ports:
       - "3000:3000"
@@ -534,7 +546,7 @@ sudo podman run --rm \
   --network host \
   --volume "$HOME/delphix-reports:/home/delphix/reports:Z" \
   --volume "$HOME/.dct-toolkit:/root/.dct-toolkit:ro,Z" \
-  localhost/delphix-implementation-toolkit:0.1.0 \
+  localhost/delphix-implementation-toolkit:2.6.0 \
   cc-install-report \
     --client "Organization name" \
     --prefix "0-" \
@@ -564,7 +576,7 @@ docker run --rm \
   --network host \
   --volume "$HOME/delphix-reports:/home/delphix/reports:Z" \
   --volume "$HOME/.dct-toolkit:/root/.dct-toolkit:ro,Z" \
-  delphix-implementation-toolkit:0.1.0 \
+  delphix-implementation-toolkit:2.6.0 \
   cc-install-report \
     --client "Organization name" \
     --prefix "0-" \
