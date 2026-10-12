@@ -345,8 +345,8 @@ O Docker não utiliza Quadlet. Para manter o helper como um serviço Docker, cri
 
 ```yaml
 services:
-  masking-helper:
-    image: delphix-implementation-toolkit:<version>
+  delphix-masking-helper:
+    image: localhost/delphix-implementation-toolkit:${IMAGE_VERSION:-<version>}
     container_name: delphix-masking-helper
     ports:
       - "3000:3000"
@@ -362,12 +362,16 @@ volumes:
     name: dlpx-helper-files
 ```
 
+O script `build-and-export-image.sh` cria o arquivo `.env` com a versão selecionada e o Compose o
+utiliza automaticamente. Se a imagem foi construída manualmente, crie `.env` com
+`IMAGE_VERSION=<version>`.
+
 Antes de iniciar o Compose, verifique se não há um helper manual ou Quadlet em execução:
 
 ```bash
 sudo docker compose -f docker-compose.yml up -d
 sudo docker compose -f docker-compose.yml ps
-sudo docker compose -f docker-compose.yml logs -f masking-helper
+sudo docker compose -f docker-compose.yml logs -f delphix-masking-helper
 sudo docker compose -f docker-compose.yml down
 ```
 

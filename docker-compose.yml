@@ -1,6 +1,6 @@
 services:
   delphix-masking-helper:
-    image: localhost/delphix-implementation-toolkit:2.7.1
+    image: localhost/delphix-implementation-toolkit:${IMAGE_VERSION:-2.7.1}
     container_name: delphix-masking-helper
     restart: unless-stopped
     ports:

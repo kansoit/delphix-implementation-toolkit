@@ -7,6 +7,7 @@ images/
 *.tar.gz
 *.sha256
 *.properties
+.env
 output/
 reports/
 *.log

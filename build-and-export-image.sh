@@ -45,6 +45,9 @@ command -v "$CONTAINER_ENGINE" >/dev/null || {
 echo "Building image: $IMAGE_REFERENCE"
 "${CONTAINER_COMMAND[@]}" build "${BUILD_ARGS[@]}"
 
+printf 'IMAGE_VERSION=%s\n' "$IMAGE_TAG" > "$SCRIPT_DIR/.env"
+echo "Compose version written to: $SCRIPT_DIR/.env"
+
 OUTPUT_DIR="$SCRIPT_DIR/images"
 ARCHIVE="$OUTPUT_DIR/delphix-implementation-toolkit-${IMAGE_TAG}.tar.gz"
 CHECKSUM="${ARCHIVE}.sha256"
