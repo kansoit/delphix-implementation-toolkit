@@ -45,6 +45,7 @@ ENV HOME=/home/delphix \
     NPM_CONFIG_PROGRESS=false \
     NPM_CONFIG_UPDATE_NOTIFIER=false \
     NODE_ENV=production \
+    DLPX_PACKAGED_RELEASE=true \
     PORT=3000
 
 RUN apt-get update \
