@@ -1,0 +1,63 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+IMAGE_TAG="${1:-}"
+CONTAINER_ENGINE="${CONTAINER_ENGINE:-podman}"
+CONTAINER_COMMAND=(sudo "$CONTAINER_ENGINE")
+
+if [[ -z "$IMAGE_TAG" ]]; then
+  echo "Usage: $(basename "$0") <image-version>" >&2
+  exit 2
+fi
+
+case "$CONTAINER_ENGINE" in
+  podman)
+    IMAGE_REFERENCE="${2:-localhost/delphix-implementation-toolkit:${IMAGE_TAG}}"
+    BUILD_ARGS=(--pull=always --tag "$IMAGE_REFERENCE" --file "$SCRIPT_DIR/Dockerfile" "$SCRIPT_DIR/.build-context")
+    ;;
+  docker)
+    IMAGE_REFERENCE="${2:-delphix-implementation-toolkit:${IMAGE_TAG}}"
+    BUILD_ARGS=(--pull --tag "$IMAGE_REFERENCE" --file "$SCRIPT_DIR/Dockerfile" "$SCRIPT_DIR/.build-context")
+    ;;
+  *)
+    echo "ERROR: unsupported CONTAINER_ENGINE: $CONTAINER_ENGINE" >&2
+    echo "Use podman or docker." >&2
+    exit 2
+    ;;
+esac
+
+command -v sudo >/dev/null || {
+  echo "ERROR: sudo not found." >&2
+  exit 1
+}
+
+command -v "$CONTAINER_ENGINE" >/dev/null || {
+  echo "ERROR: container engine not found: $CONTAINER_ENGINE" >&2
+  exit 1
+}
+
+[[ -d "$SCRIPT_DIR/.build-context" ]] || {
+  echo "ERROR: .build-context not found. Run ./prepare-build-context.sh first." >&2
+  exit 1
+}
+
+echo "Building image: $IMAGE_REFERENCE"
+"${CONTAINER_COMMAND[@]}" build "${BUILD_ARGS[@]}"
+
+OUTPUT_DIR="$SCRIPT_DIR/images"
+ARCHIVE="$OUTPUT_DIR/delphix-implementation-toolkit-${IMAGE_TAG}.tar.gz"
+CHECKSUM="${ARCHIVE}.sha256"
+mkdir -p "$OUTPUT_DIR"
+
+echo "Exporting image to: $ARCHIVE"
+if [[ "$CONTAINER_ENGINE" == "podman" ]]; then
+  "${CONTAINER_COMMAND[@]}" save --format docker-archive "$IMAGE_REFERENCE" \
+    | gzip -9 -c > "$ARCHIVE"
+else
+  "${CONTAINER_COMMAND[@]}" save "$IMAGE_REFERENCE" \
+    | gzip -9 -c > "$ARCHIVE"
+fi
+
+sha256sum "$ARCHIVE" > "$CHECKSUM"
+echo "Checksum written to: $CHECKSUM"

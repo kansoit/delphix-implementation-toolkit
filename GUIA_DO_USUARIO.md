@@ -12,7 +12,33 @@ instalar Java, Node.js, Python, npm, jq ou Knap no sistema operacional.
 - Qualquer distribuição Linux compatível com Podman ou Docker Engine instalado.
 - Arquitetura x86-64.
 - Acesso de rede da VM ao DCT e, quando aplicável, ao Masking Engine.
-- Arquivo de imagem `delphix-implementation-toolkit-<version>.tar.gz`.
+- Arquivo da imagem em `images/delphix-implementation-toolkit-<version>.tar.gz`.
+
+## Preparar e exportar a imagem
+
+No equipamento usado para preparar a entrega, depois de construir a imagem, execute na raiz do
+repositório:
+
+```bash
+chmod +x build-and-export-image.sh
+./build-and-export-image.sh <version>
+```
+
+O script usa Podman por padrão e cria o arquivo da imagem e seu checksum em:
+
+O script executa as operações do mecanismo com `sudo`, portanto a imagem fica no armazenamento
+rootful usado pelo `sudo podman`.
+
+```text
+images/delphix-implementation-toolkit-<version>.tar.gz
+images/delphix-implementation-toolkit-<version>.tar.gz.sha256
+```
+
+Para uma imagem construída com Docker:
+
+```bash
+CONTAINER_ENGINE=docker ./build-and-export-image.sh <version> delphix-implementation-toolkit:<version>
+```
 
 ## Instalar o Podman
 
@@ -63,20 +89,20 @@ os mesmos volumes.
 Valide o arquivo da imagem do contêiner recebido:
 
 ```bash
-sha256sum --check delphix-implementation-toolkit-<version>.tar.gz.sha256
+sha256sum --check images/delphix-implementation-toolkit-<version>.tar.gz.sha256
 ```
 
 Carregue a imagem:
 
 ```bash
-gunzip -c delphix-implementation-toolkit-<version>.tar.gz | podman load
+gunzip -c images/delphix-implementation-toolkit-<version>.tar.gz | sudo podman load
 sudo podman images
 ```
 
 Equivalente com Docker:
 
 ```bash
-gunzip -c delphix-implementation-toolkit-<version>.tar.gz | sudo docker load
+gunzip -c images/delphix-implementation-toolkit-<version>.tar.gz | sudo docker load
 sudo docker images
 ```
 

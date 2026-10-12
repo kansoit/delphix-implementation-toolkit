@@ -68,3 +68,5 @@ done
 
 echo "Build context prepared at: $STAGE_DIR"
 du -sh "$STAGE_DIR"
+echo "Build and export the image with:"
+echo "  ./build-and-export-image.sh <version>"

@@ -3,7 +3,7 @@ set -euo pipefail
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 HELPER_DIR="${MASKING_HELPER_SRC:-${SCRIPT_DIR}/../delphix-masking-helper}"
-HELPER_TAG="${1:-v2.6.0}"
+HELPER_TAG="${1:-}"
 
 if [[ ! -d "$HELPER_DIR/.git" ]]; then
   echo "ERROR: delphix-masking-helper Git repository not found: $HELPER_DIR" >&2
@@ -19,6 +19,15 @@ fi
 
 echo "Fetching tags from the masking-helper remote..."
 git -C "$HELPER_DIR" fetch origin --tags
+
+if [[ -z "$HELPER_TAG" ]]; then
+  HELPER_TAG="$(git -C "$HELPER_DIR" tag --list 'v[0-9]*' --sort=-v:refname | head -n 1)"
+  [[ -n "$HELPER_TAG" ]] || {
+    echo "ERROR: no version tag found in $HELPER_DIR" >&2
+    exit 1
+  }
+  echo "No tag specified; using latest release tag: $HELPER_TAG"
+fi
 
 if ! git -C "$HELPER_DIR" rev-parse --verify --quiet "refs/tags/$HELPER_TAG" >/dev/null; then
   echo "ERROR: tag not found: $HELPER_TAG" >&2
@@ -41,9 +50,7 @@ if [[ "$HELPER_TAG" == v* && "$HELPER_VERSION" != "${HELPER_TAG#v}" ]]; then
   echo "WARNING: Git tag and package.json version differ." >&2
 fi
 
-echo "Preparing the OCI build context..."
-"$SCRIPT_DIR/prepare-build-context.sh"
-
-echo "Build context ready. Build the image with:"
-echo "  podman build --pull=always --tag localhost/delphix-implementation-toolkit:${HELPER_VERSION} --file Dockerfile .build-context"
-echo "  docker build --pull --tag delphix-implementation-toolkit:${HELPER_VERSION} --file Dockerfile .build-context"
+echo "Masking Helper source selected. Prepare the OCI build context with:"
+echo "  $SCRIPT_DIR/prepare-build-context.sh"
+echo "Finally build and export the image with:"
+echo "  $SCRIPT_DIR/build-and-export-image.sh ${HELPER_VERSION}"
