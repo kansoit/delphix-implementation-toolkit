@@ -636,9 +636,4 @@ This Docker report command has not been functionally validated in this project.
 
 ## Pending validations
 
-1. Build the image from the current repositories.
-2. Verify Node.js, Java, Python, jq, Knap, and `dct-toolkit` inside the container.
-3. Test the helper against a Delphix laboratory environment.
-4. Test the report with a non-production properties file.
-5. Export the image, load it offline, and repeat the test on the target operating system.
-6. Validate Quadlet and SELinux on the target operating system.
+1. Validate Quadlet and SELinux on the target operating system.
