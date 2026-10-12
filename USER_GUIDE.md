@@ -24,10 +24,14 @@ chmod +x build-and-export-image.sh
 ./build-and-export-image.sh <version>
 ```
 
-The script uses Podman by default and creates the image archive and checksum under:
-
 The script runs the container engine commands through `sudo`, so the image is stored in the rootful
 storage used by `sudo podman`.
+
+It first checks which container-engine package is installed, preferring Podman when both are
+installed. If package metadata cannot be queried, it falls back to an available `podman` or
+`docker` executable. Select Docker explicitly with `CONTAINER_ENGINE=docker`.
+
+The image archive and checksum are created under:
 
 ```text
 images/delphix-implementation-toolkit-<version>.tar.gz

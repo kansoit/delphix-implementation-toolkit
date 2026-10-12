@@ -3,13 +3,65 @@ set -euo pipefail
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 IMAGE_TAG="${1:-}"
-CONTAINER_ENGINE="${CONTAINER_ENGINE:-podman}"
-CONTAINER_COMMAND=(sudo "$CONTAINER_ENGINE")
+CONTAINER_ENGINE="${CONTAINER_ENGINE:-}"
 
 if [[ -z "$IMAGE_TAG" ]]; then
   echo "Usage: $(basename "$0") <image-version>" >&2
   exit 2
 fi
+
+package_installed() {
+  local engine="$1" package
+
+  if command -v rpm >/dev/null 2>&1; then
+    for package in "$engine"; do
+      rpm -q "$package" >/dev/null 2>&1 && return 0
+    done
+    [[ "$engine" == docker ]] && {
+      for package in docker-ce docker.io; do
+        rpm -q "$package" >/dev/null 2>&1 && return 0
+      done
+    }
+  fi
+
+  if command -v dpkg-query >/dev/null 2>&1; then
+    for package in "$engine"; do
+      dpkg-query -W -f='${Status}' "$package" 2>/dev/null \
+        | grep -q 'install ok installed' && return 0
+    done
+    [[ "$engine" == docker ]] && {
+      for package in docker-ce docker.io; do
+        dpkg-query -W -f='${Status}' "$package" 2>/dev/null \
+          | grep -q 'install ok installed' && return 0
+      done
+    }
+  fi
+
+  return 1
+}
+
+if [[ -z "$CONTAINER_ENGINE" ]]; then
+  if package_installed podman; then
+    CONTAINER_ENGINE=podman
+    ENGINE_SOURCE="installed package"
+  elif package_installed docker; then
+    CONTAINER_ENGINE=docker
+    ENGINE_SOURCE="installed package"
+  elif command -v podman >/dev/null 2>&1; then
+    CONTAINER_ENGINE=podman
+    ENGINE_SOURCE="available executable"
+  elif command -v docker >/dev/null 2>&1; then
+    CONTAINER_ENGINE=docker
+    ENGINE_SOURCE="available executable"
+  else
+    echo "ERROR: neither podman nor docker was found." >&2
+    exit 1
+  fi
+else
+  ENGINE_SOURCE="CONTAINER_ENGINE override"
+fi
+
+CONTAINER_COMMAND=(sudo "$CONTAINER_ENGINE")
 
 case "$CONTAINER_ENGINE" in
   podman)
@@ -43,6 +95,7 @@ command -v "$CONTAINER_ENGINE" >/dev/null || {
 }
 
 echo "Building image: $IMAGE_REFERENCE"
+echo "Container engine: $CONTAINER_ENGINE ($ENGINE_SOURCE, rootful via sudo)"
 "${CONTAINER_COMMAND[@]}" build "${BUILD_ARGS[@]}"
 
 printf 'IMAGE_VERSION=%s\n' "$IMAGE_TAG" > "$SCRIPT_DIR/.env"

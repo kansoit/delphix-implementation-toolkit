@@ -141,10 +141,11 @@ chmod +x build-and-export-image.sh
 ./build-and-export-image.sh 2.7.1
 ```
 
-The script uses Podman by default and creates:
-
-The build and export commands use `sudo`, so the image is created in the rootful container storage
-used by `sudo podman`. The same applies when `CONTAINER_ENGINE=docker` is selected.
+The script first checks which container-engine package is installed, preferring Podman when both
+Podman and Docker are installed. If package metadata is unavailable, it falls back to an available
+`podman` or `docker` executable. Set `CONTAINER_ENGINE=docker` to select Docker explicitly. The
+build and export commands use `sudo`, so the image is created in rootful container storage. The
+script creates:
 
 ```text
 images/delphix-implementation-toolkit-2.7.1.tar.gz

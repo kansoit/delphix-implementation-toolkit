@@ -24,10 +24,14 @@ chmod +x build-and-export-image.sh
 ./build-and-export-image.sh <version>
 ```
 
-O script usa Podman por padrão e cria o arquivo da imagem e seu checksum em:
-
 O script executa as operações do mecanismo com `sudo`, portanto a imagem fica no armazenamento
 rootful usado pelo `sudo podman`.
+
+Primeiro verifica qual pacote do mecanismo está instalado, preferindo Podman quando ambos estão
+instalados. Se não puder consultar os pacotes, usa um executável `podman` ou `docker` disponível.
+É possível selecionar Docker explicitamente com `CONTAINER_ENGINE=docker`.
+
+O arquivo da imagem e seu checksum são criados em:
 
 ```text
 images/delphix-implementation-toolkit-<version>.tar.gz
