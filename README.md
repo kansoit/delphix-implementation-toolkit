@@ -215,9 +215,11 @@ sudo podman build --pull=always \
 Record the exact Node.js version used for a delivery. The `current` tag moves over time, while a
 specific tag makes the build easier to reproduce.
 
-The build configures npm to install global tools under `/usr/local` and disables npm audit, fund,
-progress, and update notifications. The default Knap version is `latest`; an approved version can
-be selected with `--build-arg KNAP_VERSION=<version>`.
+The final image configures npm to install global tools under `/usr/local` and disables audit, fund,
+progress, and update notifications for runtime npm operations. During the intermediate build stage,
+npm installs the application dependencies and may report audit findings; those findings are not
+suppressed by the Dockerfile and must be reviewed separately. The default Knap version is `latest`;
+an approved version can be selected with `--build-arg KNAP_VERSION=<version>`.
 
 ## Masking Helper variables
 
