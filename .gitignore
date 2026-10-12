@@ -2,7 +2,8 @@
 .build-context/
 
 # Offline image exports and client-specific material.
-images/
+images/*
+!images/.gitkeep
 *.tar
 *.tar.gz
 *.sha256
