@@ -17,7 +17,7 @@ RUN npm install --global "npm@${NPM_VERSION}" \
     && npm run build --prefix frontend \
     && rm -rf frontend/node_modules \
     && mkdir -p /runtime/helper/frontend/src/lib /runtime/helper/java-runner /runtime/report \
-    && cp server.js ai.js delphix.js package.json /runtime/helper/ \
+    && cp server.js ai.js delphix.js dct.js hooks.js http-client.js preset-bundle.js package.json /runtime/helper/ \
     && cp -a node_modules classifiers presets lib /runtime/helper/ \
     && cp -a java-runner/AlgorithmRunner.jar /runtime/helper/java-runner/ \
     && cp -a frontend/dist /runtime/helper/frontend/ \

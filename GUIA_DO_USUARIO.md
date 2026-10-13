@@ -4,6 +4,9 @@
 
 Este guia descreve como instalar e operar a imagem em uma VM.
 
+A imagem foi construída e validada funcionalmente com o Masking Helper `3.0.0`, que constitui a
+versão de referência deste guia.
+
 A VM é temporária e deve ter conectividade com os endpoints privados da Delphix. Não é necessário
 instalar Java, Node.js, Python, npm, jq ou Knap no sistema operacional.
 
