@@ -374,9 +374,17 @@ and local files are no longer needed.
 
 ## Generate an installation report
 
+The bundled generator currently covers Continuous Compliance configuration retrieved from DCT and
+registered Continuous Compliance Engines. Reporting for Continuous Data is not included yet.
+
+For complete documentation of the generator, its command-line options, and filtering behavior, see
+the [`delphix_install_report` README](https://github.com/kansoit/delphix_install_report).
+
 The optional `--engine` parameter filters by exact name. Use `--engine "DPXMSK"` for a registered
 Continuous Compliance Engine or `--engine "DCT / Global"` for objects managed globally by DCT. If
 omitted, the report includes all masking engines and DCT-global objects.
+Only engines registered as masking engines are accepted; virtualization engines are rejected because
+they require a different reporting workflow.
 
 The report is a one-off operation and may run while the helper is stopped or running:
 
@@ -398,6 +406,15 @@ sudo podman run --rm \
     --template /home/delphix/.local/bin/cc_install_report_sp.md \
     --profile-set "ASDD Spanish"
 ```
+
+To restrict the report to one engine, add the exact engine name before `--profile-set`, for example:
+
+```text
+--engine "DCT / Global"
+```
+
+Use the exact name shown by DCT or Masking Helper. Omit `--engine` to include all masking engines and
+DCT-global objects.
 
 Docker equivalent:
 

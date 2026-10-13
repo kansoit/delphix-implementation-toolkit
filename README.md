@@ -567,11 +567,18 @@ and local files are no longer needed.
 
 ## Report generation
 
+The bundled installation report currently covers Continuous Compliance configuration retrieved from
+DCT and registered Continuous Compliance Engines. Reporting for Continuous Data is not included yet.
 The report is a one-off operation:
+
+For the complete report-generator documentation, including all command-line options and filtering
+behavior, see the [`delphix_install_report` README](https://github.com/kansoit/delphix_install_report).
 
 The optional `--engine` parameter filters by exact name. Use `--engine "DPXMSK"` for a registered
 Continuous Compliance Engine or `--engine "DCT / Global"` for objects managed globally by DCT. If
-omitted, the report includes all masking engines and DCT-global objects.
+omitted, the report includes all masking engines and DCT-global objects. Only engines registered as
+masking engines are valid; virtualization engines are rejected because they require a different
+reporting workflow.
 
 ```bash
 mkdir -p "$HOME/delphix-reports"
@@ -590,6 +597,15 @@ sudo podman run --rm \
     --template /home/delphix/.local/bin/cc_install_report_sp.md \
     --profile-set "ASDD Spanish"
 ```
+
+To restrict the report to one engine, add the exact engine name before `--profile-set`, for example:
+
+```text
+--engine "DCT / Global"
+```
+
+Use the exact registered name shown by DCT or the Masking Helper. Omit `--engine` to include all
+masking engines and DCT-global objects.
 
 The one-off report container runs as root only inside the short-lived container. This is intentional:
 the DCT Toolkit resolves its configuration from the root Java home (`/root/.dct-toolkit`) and the
