@@ -387,6 +387,11 @@ configuração e os arquivos locais do helper ainda forem necessários.
 
 ## Gerar um relatório de instalação
 
+O parâmetro opcional `--engine` filtra pelo nome exato. Use `--engine "DPXMSK"` para um
+Continuous Compliance Engine registrado ou `--engine "DCT / Global"` para objetos administrados
+globalmente pelo DCT. Se for omitido, todos os engines de masking e os objetos globais do DCT serão
+incluídos.
+
 O relatório é uma operação pontual e pode ser executado com o helper parado ou em execução:
 
 ```bash

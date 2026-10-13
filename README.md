@@ -569,6 +569,10 @@ and local files are no longer needed.
 
 The report is a one-off operation:
 
+The optional `--engine` parameter filters by exact name. Use `--engine "DPXMSK"` for a registered
+Continuous Compliance Engine or `--engine "DCT / Global"` for objects managed globally by DCT. If
+omitted, the report includes all masking engines and DCT-global objects.
+
 ```bash
 mkdir -p "$HOME/delphix-reports"
 sudo podman run --rm \
